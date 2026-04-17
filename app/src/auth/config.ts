@@ -7,6 +7,9 @@ export const AUTH_CONFIG = {
   /** JWT session expiry in seconds (8 hours per FR-AUTH-04) */
   sessionExpirySeconds: 8 * 60 * 60,
 
+  /** Refresh threshold in seconds -- refresh token if less than this remaining (FR-AUTH-08) */
+  refreshThresholdSeconds: 1 * 60 * 60, // 1 hour
+
   /** Cookie name for the JWT session */
   sessionCookieName: "dw-session",
 

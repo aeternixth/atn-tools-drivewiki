@@ -20,12 +20,12 @@
 | FR-AUTH-01 | OAuth redirect to Google | T-001 | config.test.ts, manual | src/auth/google.ts, src/app/api/auth/google/route.ts | DONE |
 | FR-AUTH-02 | Exchange OAuth code for tokens + JWT session | T-001 | crypto.test.ts (21 pass) | src/auth/session.ts, src/app/api/auth/callback/route.ts | DONE |
 | FR-AUTH-03 | Create/update user from Google profile | T-001 | config.test.ts (domain validation) | src/app/api/auth/callback/route.ts (prisma upsert) | DONE |
-| FR-AUTH-04 | Issue JWT with user context | T-002 | _pending_ | _pending_ | TODO |
-| FR-AUTH-05 | Validate JWT on every request | T-002 | _pending_ | _pending_ | TODO |
+| FR-AUTH-04 | Issue JWT with user context | T-002 | session-pure.test.ts (claims, exp) | src/auth/session.ts (encryptSession with jti) | DONE |
+| FR-AUTH-05 | Validate JWT on every request | T-002 | session-pure.test.ts (tampered, expired, wrong key) | src/proxy.ts, src/auth/validate-request.ts, src/auth/dal.ts | DONE |
 | FR-AUTH-06 | Department scoping enforcement | T-004 | _pending_ | _pending_ | TODO |
 | FR-AUTH-07 | Role hierarchy enforcement | T-004 | _pending_ | _pending_ | TODO |
-| FR-AUTH-08 | Token auto-refresh | T-002 | _pending_ | _pending_ | TODO |
-| FR-AUTH-09 | Session revocation on logout | T-002 | _pending_ | _pending_ | TODO |
+| FR-AUTH-08 | Token auto-refresh | T-002 | session-pure.test.ts (exp check) | src/auth/session.ts (refreshSessionIfNeeded) | DONE |
+| FR-AUTH-09 | Session revocation on logout | T-002 | token-blacklist.test.ts (5 pass) | src/auth/token-blacklist.ts, src/app/api/auth/logout/route.ts | DONE |
 | FR-AUTH-10 | PDPA consent for first-time users | T-003 | _pending_ | _pending_ | TODO |
 
 ### INGEST Module

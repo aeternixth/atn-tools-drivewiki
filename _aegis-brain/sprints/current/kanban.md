@@ -17,7 +17,6 @@
 | Task ID | Task Name | Points | Priority | Assignee | Dependencies | FR Links |
 |---------|-----------|--------|----------|----------|-------------|----------|
 | T-030 | HMAC Audit Logging Engine | 8 | P0 | Spider-Man | None | FR-AUDIT-01..03,06..08 |
-| T-002 | JWT Token Management | 5 | P0 | Spider-Man | T-001 | FR-AUTH-04,05,08,09 |
 | T-003 | PDPA Consent Flow | 3 | P0 | Spider-Man | T-001 | FR-AUTH-10 |
 | T-004 | RBAC Role System & Dept Scoping | 8 | P0 | Spider-Man | T-002 | FR-AUTH-06,07 |
 | T-005 | Workspace Setup Wizard | 8 | P0 | Spider-Man | T-001, T-004 | FR-ADMIN-01 |
@@ -46,6 +45,7 @@
 |---------|-----------|--------|-----------|-------------|
 | T-010 | Wiki Page Data Model (Prisma Schema) | 5 | 2026-04-17 | Gate 1: PASS (tsc clean) |
 | T-001 | Google OAuth SSO Login | 5 | 2026-04-17 | Gate 1: GREEN (21/21 tests, security OK) |
+| T-002 | JWT Token Management | 5 | 2026-04-17 | Gate 1: GREEN (35/35 tests, blacklist + refresh) |
 
 ---
 
@@ -54,9 +54,9 @@
 | Metric | Value |
 |--------|-------|
 | Total Points | 42 |
-| Completed | 10 |
-| Remaining | 32 |
-| Burndown | 2 tasks done |
+| Completed | 15 |
+| Remaining | 27 |
+| Burndown | 3 tasks done |
 
 ---
 
