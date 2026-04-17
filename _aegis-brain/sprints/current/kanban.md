@@ -16,7 +16,6 @@
 
 | Task ID | Task Name | Points | Priority | Assignee | Dependencies | FR Links |
 |---------|-----------|--------|----------|----------|-------------|----------|
-| T-010 | Wiki Page Data Model (Prisma Schema) | 5 | P0 | Spider-Man | None | FR-WIKI-01,02,04 |
 | T-030 | HMAC Audit Logging Engine | 8 | P0 | Spider-Man | None | FR-AUDIT-01..03,06..08 |
 | T-001 | Google OAuth SSO Login | 5 | P0 | Spider-Man | None | FR-AUTH-01,02,03 |
 | T-002 | JWT Token Management | 5 | P0 | Spider-Man | T-001 | FR-AUTH-04,05,08,09 |
@@ -46,7 +45,7 @@
 
 | Task ID | Task Name | Points | Completed | Gate Results |
 |---------|-----------|--------|-----------|-------------|
-| _(empty)_ | | | | |
+| T-010 | Wiki Page Data Model (Prisma Schema) | 5 | 2026-04-17 | Gate 1: PASS (tsc clean) |
 
 ---
 
@@ -55,9 +54,9 @@
 | Metric | Value |
 |--------|-------|
 | Total Points | 42 |
-| Completed | 0 |
-| Remaining | 42 |
-| Burndown | Not started |
+| Completed | 5 |
+| Remaining | 37 |
+| Burndown | 1 task done |
 
 ---
 

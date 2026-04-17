@@ -1,0 +1,391 @@
+// DriveWiki — Prisma Schema
+// Based on SUPER-SPEC Section 3.5 ER Diagram
+// ISO 29110 Task T-010: Wiki Page Data Model
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Core Entities
+// ============================================
+
+model Workspace {
+  id                  String       @id @default(uuid())
+  name                String
+  googleDomain        String       @unique
+  serviceAccountEmail String?
+  schemaConfig        Json?        @default("{}")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  departments         Department[]
+
+  @@map("workspaces")
+}
+
+model Department {
+  id              String       @id @default(uuid())
+  workspaceId     String
+  name            String
+  contentPolicies Json?        @default("[]")
+  wikiSchema      Json?        @default("{}")
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  workspace       Workspace    @relation(fields: [workspaceId], references: [id])
+  users           User[]
+  driveFolders    DriveFolder[]
+  wikiPages       WikiPage[]
+  wikiIndices     WikiIndex[]
+  costEvents      CostEvent[]
+  chatSessions    ChatSession[]
+
+  @@unique([workspaceId, name])
+  @@map("departments")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  DEPT_HEAD
+  MEMBER
+  VIEWER
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  name          String
+  departmentId  String?
+  role          UserRole     @default(MEMBER)
+  googleUserId  String       @unique
+  isActive      Boolean      @default(true)
+  consentAt     DateTime?    // PDPA consent timestamp
+  consentVersion String?     // PDPA consent version
+  refreshToken  String?      // Encrypted OAuth refresh token
+  lastLogin     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  department    Department?  @relation(fields: [departmentId], references: [id])
+  chatSessions  ChatSession[]
+  auditLogs     AuditLog[]
+  costEvents    CostEvent[]
+
+  @@map("users")
+}
+
+// ============================================
+// Drive Integration
+// ============================================
+
+enum SyncStatus {
+  ACTIVE
+  PAUSED
+  ERROR
+  INITIAL_SCAN
+}
+
+model DriveFolder {
+  id              String       @id @default(uuid())
+  departmentId    String
+  googleFolderId  String       @unique
+  name            String
+  syncStatus      SyncStatus   @default(ACTIVE)
+  webhookChannelId String?     // Google Drive webhook channel ID
+  webhookExpiry   DateTime?    // Webhook expiration
+  lastSyncAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  department      Department   @relation(fields: [departmentId], references: [id])
+  documents       DriveDocument[]
+
+  @@map("drive_folders")
+}
+
+model DriveDocument {
+  id              String       @id @default(uuid())
+  driveFolderId   String
+  googleFileId    String       @unique
+  title           String
+  mimeType        String
+  contentHash     String?      // SHA-256 for dedup (FR-INGEST-05)
+  versionNumber   Int          @default(1)
+  googleModifiedAt DateTime?
+  lastIngestedAt  DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  driveFolder     DriveFolder  @relation(fields: [driveFolderId], references: [id])
+  wikiPages       WikiPageSource[]
+
+  @@map("drive_documents")
+}
+
+// ============================================
+// Wiki Engine (Karpathy's Layer 2)
+// ============================================
+
+enum WikiPageType {
+  ENTITY
+  CONCEPT
+  SUMMARY
+  FILED       // Auto-filed from chat (knowledge compounding)
+  INDEX       // Master index page
+}
+
+enum WikiPageStatus {
+  ACTIVE
+  STALE
+  FLAGGED
+  ARCHIVED
+}
+
+model WikiPage {
+  id              String          @id @default(uuid())
+  departmentId    String
+  type            WikiPageType
+  title           String
+  markdownContent String          // Full markdown content
+  status          WikiPageStatus  @default(ACTIVE)
+  metadata        Json?           @default("{}")
+  isShared        Boolean         @default(false) // Cross-department visibility (FR-WIKI-08)
+  version         Int             @default(1)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  department      Department      @relation(fields: [departmentId], references: [id])
+  sourceDocs      WikiPageSource[]
+  outgoingRefs    WikiCrossRef[]  @relation("fromPage")
+  incomingRefs    WikiCrossRef[]  @relation("toPage")
+  indices         WikiIndex[]
+  versions        WikiPageVersion[]
+  chatMessages    ChatMessageWikiPage[]
+
+  @@unique([departmentId, title, type])
+  @@map("wiki_pages")
+}
+
+// Join table: WikiPage <-> DriveDocument (many-to-many provenance, FR-WIKI-09)
+model WikiPageSource {
+  id            String        @id @default(uuid())
+  wikiPageId    String
+  documentId    String
+  createdAt     DateTime      @default(now())
+
+  wikiPage      WikiPage      @relation(fields: [wikiPageId], references: [id], onDelete: Cascade)
+  document      DriveDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([wikiPageId, documentId])
+  @@map("wiki_page_sources")
+}
+
+// Version history for wiki pages (FR-WIKI-02)
+model WikiPageVersion {
+  id              String       @id @default(uuid())
+  wikiPageId      String
+  version         Int
+  markdownContent String
+  metadata        Json?
+  createdAt       DateTime     @default(now())
+
+  wikiPage        WikiPage     @relation(fields: [wikiPageId], references: [id], onDelete: Cascade)
+
+  @@unique([wikiPageId, version])
+  @@map("wiki_page_versions")
+}
+
+// Bidirectional cross-references (FR-WIKI-05)
+model WikiCrossRef {
+  id               String   @id @default(uuid())
+  fromPageId       String
+  toPageId         String
+  relationshipType String   @default("related") // related, mentions, see_also, supersedes
+  createdAt        DateTime @default(now())
+
+  fromPage         WikiPage @relation("fromPage", fields: [fromPageId], references: [id], onDelete: Cascade)
+  toPage           WikiPage @relation("toPage", fields: [toPageId], references: [id], onDelete: Cascade)
+
+  @@unique([fromPageId, toPageId])
+  @@map("wiki_cross_refs")
+}
+
+// Full-text search index (FR-WIKI-03)
+// Note: tsvector managed via raw SQL migration for Thai + English support
+model WikiIndex {
+  id                String   @id @default(uuid())
+  departmentId      String
+  pageId            String
+  indexType         String   @default("content") // content, title, keywords
+  searchableContent String   // Plain text for indexing
+  // tsvector column added via raw SQL migration
+  updatedAt         DateTime @updatedAt
+
+  department        Department @relation(fields: [departmentId], references: [id])
+  wikiPage          WikiPage   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, indexType])
+  @@map("wiki_indices")
+}
+
+// ============================================
+// Chat Engine
+// ============================================
+
+model ChatSession {
+  id            String        @id @default(uuid())
+  userId        String
+  departmentId  String
+  title         String?       // Auto-generated from first message
+  startedAt     DateTime      @default(now())
+  lastMessageAt DateTime      @default(now())
+  isDeleted     Boolean       @default(false) // Soft delete
+
+  user          User          @relation(fields: [userId], references: [id])
+  department    Department    @relation(fields: [departmentId], references: [id])
+  messages      ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model ChatMessage {
+  id              String      @id @default(uuid())
+  sessionId       String
+  role            MessageRole
+  content         String
+  citations       Json?       @default("[]") // Array of citation objects
+  filedAsWikiPage Boolean     @default(false)
+  filedPageId     String?     // Reference to filed wiki page
+  rating          Int?        // -1 (thumbs down), 0 (neutral), 1 (thumbs up)
+  ratingComment   String?
+  tokensUsed      Int?        // For cost tracking (FR-CHAT-12)
+  createdAt       DateTime    @default(now())
+
+  session         ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  wikiPagesUsed   ChatMessageWikiPage[]
+
+  @@map("chat_messages")
+}
+
+// Join table: ChatMessage <-> WikiPage (pages used to generate answer)
+model ChatMessageWikiPage {
+  id            String      @id @default(uuid())
+  messageId     String
+  wikiPageId    String
+
+  message       ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  wikiPage      WikiPage    @relation(fields: [wikiPageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, wikiPageId])
+  @@map("chat_message_wiki_pages")
+}
+
+// ============================================
+// Audit & Compliance
+// ============================================
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  userId        String?  // Null for system actions
+  action        String   // e.g., "auth.login", "wiki.create", "chat.query"
+  resourceType  String?  // e.g., "WikiPage", "ChatSession", "User"
+  resourceId    String?
+  metadata      Json?    @default("{}")
+  hmacSignature String   // HMAC-SHA256 signature (FR-AUDIT-01)
+  previousHmac  String?  // Chain to previous entry (FR-AUDIT-02)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  user          User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// Cost Management
+// ============================================
+
+enum CostEventType {
+  INGESTION
+  CHAT_QUERY
+  CHAT_FALLBACK
+  LINT_CHECK
+  SUMMARY_GENERATION
+}
+
+model CostEvent {
+  id               String        @id @default(uuid())
+  departmentId     String
+  userId           String?       // Null for system events (ingestion, lint)
+  eventType        CostEventType
+  model            String        @default("gemini-2.5-pro") // LLM model used
+  inputTokens      Int           @default(0)
+  outputTokens     Int           @default(0)
+  estimatedCostUsd Float         @default(0)
+  metadata         Json?         @default("{}")
+  createdAt        DateTime      @default(now())
+
+  department       Department    @relation(fields: [departmentId], references: [id])
+  user             User?         @relation(fields: [userId], references: [id])
+
+  @@index([departmentId, createdAt])
+  @@index([userId, createdAt])
+  @@map("cost_events")
+}
+
+// ============================================
+// Department Cost Quotas (FR-COST-05)
+// ============================================
+
+model DepartmentQuota {
+  id              String   @id @default(uuid())
+  departmentId    String   @unique
+  monthlyLimitUsd Float
+  alertThreshold  Float    @default(0.8) // Alert at 80% of quota
+  isEnforced      Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("department_quotas")
+}
+
+// ============================================
+// Ingestion Log
+// ============================================
+
+model IngestionLog {
+  id            String   @id @default(uuid())
+  departmentId  String
+  documentId    String?
+  documentTitle String?
+  action        String   // "ingested", "skipped", "error", "policy_blocked"
+  pagesCreated  Int      @default(0)
+  pagesUpdated  Int      @default(0)
+  refsCreated   Int      @default(0)
+  tokensUsed    Int      @default(0)
+  errorMessage  String?
+  duration      Int?     // milliseconds
+  createdAt     DateTime @default(now())
+
+  @@index([departmentId, createdAt])
+  @@map("ingestion_logs")
+}
