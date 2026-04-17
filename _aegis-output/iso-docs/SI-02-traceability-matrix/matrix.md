@@ -17,9 +17,9 @@
 
 | Req ID | Requirement | Task ID | Test Case | Code Module | Status |
 |--------|------------|---------|-----------|-------------|--------|
-| FR-AUTH-01 | OAuth redirect to Google | T-001 | _pending_ | _pending_ | TODO |
-| FR-AUTH-02 | Exchange OAuth code for tokens | T-001 | _pending_ | _pending_ | TODO |
-| FR-AUTH-03 | Create/update user from Google profile | T-001 | _pending_ | _pending_ | TODO |
+| FR-AUTH-01 | OAuth redirect to Google | T-001 | config.test.ts, manual | src/auth/google.ts, src/app/api/auth/google/route.ts | DONE |
+| FR-AUTH-02 | Exchange OAuth code for tokens + JWT session | T-001 | crypto.test.ts (21 pass) | src/auth/session.ts, src/app/api/auth/callback/route.ts | DONE |
+| FR-AUTH-03 | Create/update user from Google profile | T-001 | config.test.ts (domain validation) | src/app/api/auth/callback/route.ts (prisma upsert) | DONE |
 | FR-AUTH-04 | Issue JWT with user context | T-002 | _pending_ | _pending_ | TODO |
 | FR-AUTH-05 | Validate JWT on every request | T-002 | _pending_ | _pending_ | TODO |
 | FR-AUTH-06 | Department scoping enforcement | T-004 | _pending_ | _pending_ | TODO |
