@@ -26,7 +26,7 @@
 | FR-AUTH-07 | Role hierarchy enforcement | T-004 | _pending_ | _pending_ | TODO |
 | FR-AUTH-08 | Token auto-refresh | T-002 | session-pure.test.ts (exp check) | src/auth/session.ts (refreshSessionIfNeeded) | DONE |
 | FR-AUTH-09 | Session revocation on logout | T-002 | token-blacklist.test.ts (5 pass) | src/auth/token-blacklist.ts, src/app/api/auth/logout/route.ts | DONE |
-| FR-AUTH-10 | PDPA consent for first-time users | T-003 | _pending_ | _pending_ | TODO |
+| FR-AUTH-10 | PDPA consent for first-time users | T-003 | manual (consent flow) | src/app/(auth)/consent/page.tsx, src/app/api/auth/consent/route.ts | DONE |
 
 ### INGEST Module
 

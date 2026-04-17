@@ -14,6 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_state: "Session expired. Please try again.",
   missing_params: "Invalid callback. Please try again.",
   callback_failed: "Authentication failed. Please try again.",
+  consent_declined: "You must accept the data protection consent to use DriveWiki. Please sign in again to review the consent form.",
 };
 
 export default async function LoginPage(props: { searchParams: SearchParams }) {
