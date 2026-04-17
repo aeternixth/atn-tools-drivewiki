@@ -1,0 +1,153 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_TASK_LIST_ID": "aegis-shared-tasks",
+    "AEGIS_HOOK_PROFILE": "standard"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-with-flags.sh guard-bash .claude/hooks/guard-bash.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-with-flags.sh guard-write .claude/hooks/guard-write.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-with-flags.sh post-tool-use .claude/hooks/post-tool-use.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-with-flags.sh post-edit-accumulate .claude/hooks/post-edit-accumulate.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/run-with-flags.sh on-stop .claude/hooks/on-stop.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pip:*)",
+      "Bash(pip3:*)",
+      "Bash(tmux:*)",
+      "Bash(/opt/homebrew/bin/*)",
+      "Bash(brew:*)",
+      "Bash(chmod:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(echo:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(touch:*)",
+      "Bash(date:*)",
+      "Bash(export:*)",
+      "Bash(which:*)",
+      "Bash(claude:*)",
+      "Bash(gh:*)",
+      "Bash(jq:*)",
+      "Bash(tee:*)",
+      "Bash(sleep:*)",
+      "Bash(true:*)",
+      "Bash(test:*)",
+      "Bash(diff:*)",
+      "Bash(pwd:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(realpath:*)",
+      "Bash(xargs:*)",
+      "Bash(tr:*)",
+      "Bash(cut:*)",
+      "Bash(uniq:*)",
+      "Bash(cd:*)",
+      "Bash(source:*)",
+      "Bash(swift:*)",
+      "Bash(swiftc:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(go:*)",
+      "Bash(cargo:*)",
+      "Bash(rustc:*)",
+      "Bash(make:*)",
+      "Bash(cmake:*)",
+      "Bash(docker:*)",
+      "Bash(kubectl:*)",
+      "Bash(terraform:*)",
+      "Bash(uvx:*)",
+      "Bash(uv:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(bun:*)",
+      "Bash(bunx:*)",
+      "Bash(task:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Agent",
+      "TeamCreate",
+      "TeamDelete",
+      "SendMessage"
+    ],
+    "deny": [
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(rm -rf /*:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git commit --amend:*)"
+    ]
+  }
+}

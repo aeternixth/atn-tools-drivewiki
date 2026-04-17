@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "AEGIS hook profile registry — maps profile tier to enabled hook IDs.",
+  "profiles": {
+    "minimal": [
+      "guard-bash"
+    ],
+    "standard": [
+      "guard-bash",
+      "guard-write",
+      "post-tool-use",
+      "post-edit-accumulate",
+      "on-stop"
+    ],
+    "strict": [
+      "guard-bash",
+      "guard-write",
+      "post-tool-use",
+      "post-edit-accumulate",
+      "on-stop",
+      "tinman-heartbeat"
+    ]
+  },
+  "notes": {
+    "default": "standard",
+    "env_var": "AEGIS_HOOK_PROFILE",
+    "disable_var": "AEGIS_DISABLED_HOOKS (comma-separated hook IDs)",
+    "pair_with_autonomy": {
+      "L1": "minimal",
+      "L2": "standard",
+      "L3": "strict"
+    }
+  }
+}
